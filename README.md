@@ -2,7 +2,7 @@
 
 ## 📘 Overview
 A web application to track and manage Tuberculosis data. Built with:  
-- **Frontend**: HTML + JavaScript, hosted on Amazon S3  
+- **Frontend**: HTML + CSS + JavaScript, hosted on Amazon S3  
 - **Backend**: Flask (Python), hosted on Amazon EC2  
 - **Database**: PostgreSQL on Amazon RDS  
 
