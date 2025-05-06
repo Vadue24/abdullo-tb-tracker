@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tuberculosis Tracker - Abdullo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px 16px;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 12px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from { bottom: 10px; opacity: 0; }
+            to { bottom: 30px; opacity: 1; }
+        }
+
+        @keyframes fadeout {
+            from { bottom: 30px; opacity: 1; }
+            to { bottom: 10px; opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Tuberculosis Tracker</h1>
+
+    <button onclick="addData()">Add Sample Data</button>
+
+    <div id="data-table">Loading data...</div>
+
+    <div id="toast"></div>
+
+    <script>
+        function showToast(message, color = '#28a745') {
+            const toast = document.getElementById("toast");
+            toast.style.backgroundColor = color;
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function loadData() {
+            fetch('http://yourEC2ip:80/records')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<table><tr><th>ID</th><th>Country</th><th>Year</th><th>Action</th></tr>';
+                    data.forEach(row => {
+                        html += `<tr>
+                                    <td>${row.id}</td>
+                                    <td>${row.country}</td>
+                                    <td>${row.year}</td>
+                                    <td><button onclick="deleteById(${row.id})" style="background-color:#dc3545;">Delete</button></td>
+                                </tr>`;
+                    });
+                    html += '</table>';
+                    document.getElementById('data-table').innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Fetch Error:', err);
+                    document.getElementById('data-table').innerText = "Failed to load data.";
+                    showToast("Failed to load data", "#dc3545");
+                });
+        }
+
+        function addData() {
+            fetch('http://yourEC2ip:80/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Add failed');
+                    return response.text();
+                })
+                .then(data => {
+                    showToast("Data added successfully");
+                    loadData();
+                })
+                .catch(err => {
+                    console.error('Add Error:', err);
+                    showToast("Failed to add data", "#dc3545");
+                });
+        }
+
+        function deleteById(id) {
+            fetch('http://yourEC2ip:80/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Delete failed');
+                    return response.text();
+                })
+                .then(data => {
+                    showToast("Row deleted successfully", "#ffc107");
+                    loadData();
+                })
+                .catch(err => {
+                    console.error('Delete Error:', err);
+                    showToast("Failed to delete", "#dc3545");
+                });
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>
